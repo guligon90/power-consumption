@@ -1,5 +1,5 @@
 # Power Consumption API [WIP]
-A Express microservice, running on Node.js, for generating random power consumption data over a period.
+A Express microservice, running on Node.js, for generating random power (in watts) and energy consumption data (the latter in kWh), over a time period.
 
 ## Getting started
 Make sure that you have the latest stable releases of [Git](https://git-scm.com/), [Docker](https://docs.docker.com/), [Docker Compose](https://docs.docker.com/compose/) and [Node.js](https://nodejs.org/) installed in your system.
@@ -30,11 +30,30 @@ power-consumption    | Power consumption API listening at port 3000
 
 ## API documentation
 
+### Background
+
+Mathematically, power and energy are related as follows:
+
+$$P(t) := \frac{dE}{dt} \Leftrightarrow E(t) = E(t_0) + \int_{t_0}^t P(\tau)\,d\tau$$
+
+In this API, power values are generated in a constant minute step basis, the integral above is numerically evaluated by means
+of the trapezoidal scheme, i.e.,
+
+$$
+E\,[\text{kWh}] \approx 
+    \underbrace{\left( \frac{1}{10^3}\right )}_{\text{conversion to kWh}}
+    \times\underbrace{\left( \frac{1}{60}\right)}_{\text{conversion to hours}}
+    \times\underbrace{\sum_{k=1}^{n}\frac{\left(P_{k} + P_{k-1}\right)\Delta t}{2}}_{\text{trapezoidal sum}}
+$$
+
+where the power $P_{k},\,k\in\{1,...,n\}$ are in watts and the time step $\Delta t$ are in minutes.
+
+### Routing
 Initially, it was meant to be a simple REST microservice for testing, with only one endpoint:
 ```
 GET /api/v1/consumption/**
 ```
-### Query string parameters
+#### Query string parameters
 
 | Name             |      Type         |                      Description                         | Default Value |
 |------------------|:-----------------:|:---------------------------------------------------------|:--------------|
@@ -44,7 +63,7 @@ GET /api/v1/consumption/**
 | `maxPower`       |    `number`       | The highest value of active (real) power, in watts [W],<br>for random generation, simulating some eletrical device.  | `10.0` |
 | `minuteStep`     |    `integer`      | The step in minutes between randomly-generated power<br>values for a single day. | `5` |
 
-### Example request
+#### Request example
 * Request (using [Postman](https://www.getpostman.com/)):
   ```
   GET /api/v1/consumption/?startTimestamp=2019-11-09 15:23&minuteStep=2&endTimestamp=2020-11-11 16:18 HTTP/1.1
