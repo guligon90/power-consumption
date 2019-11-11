@@ -1,10 +1,10 @@
 
 const convertTimeToMinutes = (dateTimeObj) => {
-  return (dateTimeObj.getHours()*60) 
+  return (dateTimeObj.getHours()*60)
     + (dateTimeObj.getSeconds()/60)
     + dateTimeObj.getMinutes();
 };
-  
+
 const getLocalISODateTimeString = (dateTimeObj, format = '') => {
   const tzOffset = (dateTimeObj).getTimezoneOffset() * 60000; // Timezone offset in milliseconds
   const dtWithoutTimezone = (new Date(dateTimeObj - tzOffset)).toISOString().slice(0, -1);
@@ -31,7 +31,7 @@ const getDailyHours = (startTimestamp, endTimestamp) => {
   const end = new Date(endTimestamp);
 
   for (dt=start; dt<=end; dt.setHours(dt.getHours()+1)) {
-    const hour = (dt.getHours() < 10) ? `0${dt.getHours()}` : dt.getHours();
+    let hour = (dt.getHours() < 10) ? `0${dt.getHours()}` : dt.getHours().toString();
     hours.push(hour);
   }
 
@@ -40,8 +40,9 @@ const getDailyHours = (startTimestamp, endTimestamp) => {
 
 const generatePeriodDays = (startTimestamp, endTimestamp) => {
   let periodArray = []
-  const start = new Date(startTimestamp);
-  const end = new Date(endTimestamp);
+  // Create Date object with just the date substrings
+  const start = new Date(startTimestamp.slice(0,10));
+  const end = new Date(endTimestamp.slice(0,10));
 
   if (start.toDateString() === end.toDateString()) {
     periodArray.push(start.toISOString().slice(0,10));
