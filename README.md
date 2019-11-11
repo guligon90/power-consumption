@@ -34,19 +34,19 @@ power-consumption    | Power consumption API listening at port 3000
 
 Mathematically, power and energy are related as follows:
 
-$$P(t) := \frac{dE}{dt} \Leftrightarrow E(t) = E(t_0) + \int_{t_0}^t P(\tau)\,d\tau$$
+$$P(t) := \frac{dE}{dt} \Leftrightarrow E(t) = E(t_0) + \int_{t_0}^t P(\tau)d\tau$$
 
 In this API, power values are generated in a constant minute step basis, the integral above is numerically evaluated by means
 of the trapezoidal scheme, i.e.,
 
 $$
-E\,[\text{kWh}] \approx 
-    \underbrace{\left( \frac{1}{10^3}\right )}_{\text{conversion to kWh}}
-    \times\underbrace{\left( \frac{1}{60}\right)}_{\text{conversion to hours}}
-    \times\underbrace{\sum_{k=1}^{n}\frac{\left(P_{k} + P_{k-1}\right)\Delta t}{2}}_{\text{trapezoidal sum}}
+E[\text{kWh}] \approx 
+    \left( \frac{1}{10^3}\right )
+    \times\left( \frac{1}{60}\right)
+    \times\sum_{k=1}^{n}\frac{\left(P_{k} + P_{k-1}\right)\Delta t}{2}
 $$
 
-where the power $P_{k},\,k\in\{1,...,n\}$ are in watts and the time step $\Delta t$ are in minutes.
+where the power $P_{k}$, $k\in\{1,...,n\}$ are in watts and the time step $\Delta t$ are in minutes.
 
 ### Routing
 Initially, it was meant to be a simple REST microservice for testing, with only one endpoint:
