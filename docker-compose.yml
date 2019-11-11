@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  power-consumption:
+    env_file: docker/variables.env
+    container_name: power-consumption
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "3000:3000"
+    command: yarn start
+    volumes:
+      - .:/usr/app

@@ -1,0 +1,16 @@
+{
+  "name": "power-consumption",
+  "version": "1.0.0",
+  "description": "A Node.js REST API that mocks the power consumption data of some equiment, given the period and power range.",
+  "main": "index.js",
+  "author": "guligon90",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "lodash": "^4.17.15",
+    "nodemon": "^1.19.4"
+  },
+  "scripts": {
+    "start": "nodemon ./src/server.js 3000"
+  }
+}
