@@ -1,5 +1,5 @@
-const roundToDecimals = (value, decimals = 4) => {
-  return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+const roundToDecimals = (value, decimals = process.env.DEFAULT_DECIMAL_DIGITS) => {
+  return Number(value.toFixed(decimals));
 };
 
 const isPositiveInt = (number) => {
