@@ -26,13 +26,15 @@ const generatePowerValue = (minPower, maxPower) => {
   return numberFormat.roundToDecimals(value);
 };
 
-const generateDailyCumulativekWh = (hours, powerValues, minuteStep) => {
+const generateDailyConsumptionKWh = (hours, powerValues, minuteStep) => {
   var kWhArray = []
   var cumulativeKWh = 0.0;
+  var cumulativeKWhArray = []
   const hourStep = minuteStep/60;
 
   hours.map(hour => {
-    let kWhItem = {}
+    let kWhItem = {};
+    let cumulativekWhItem = {};
     let kiloWattHour = 0.0;
     let hourPowerValues = [];
 
@@ -50,14 +52,20 @@ const generateDailyCumulativekWh = (hours, powerValues, minuteStep) => {
       kiloWattHour += (0.001)*(1/2)*hourStep*(previousPower + actualPower);
     }
 
-    // Accumulate the energy in kWh
-    // and push the result into an array.
-    cumulativeKWh += kiloWattHour;
-    kWhItem[`${hour}:00`] = cumulativeKWh;
+    // Push the total energy  for the hour in kWh
+    kWhItem[`${hour}:00`] = numberFormat.roundToDecimals(kiloWattHour);
     kWhArray.push(kWhItem);
+
+    // Push the accumulated energy in kWh
+    cumulativeKWh += kiloWattHour;
+    cumulativekWhItem[`${hour}:00`] = numberFormat.roundToDecimals(cumulativeKWh);
+    cumulativeKWhArray.push(cumulativekWhItem);
   })
 
-  return kWhArray;
+  return {
+    hourly: kWhArray,
+    cumulative: cumulativeKWhArray,
+  }
 };
 
 const generateDailyPowerTimeSeries = (
@@ -127,10 +135,10 @@ const generatePowerTimeSeries = (
       let item = {};
       let dailyHours = dateTime.getDailyHours(start, finish);
       let dailyPower = generateDailyPowerTimeSeries(start, finish, parseInt(minuteStep), minPower, maxPower);
-      let dailyCumulativeKWh = generateDailyCumulativekWh(dailyHours, dailyPower, minuteStep);
+      let kWhValues = generateDailyConsumptionKWh(dailyHours, dailyPower, minuteStep);
 
-      lodash.set(item,`${date}.powerValues`, dailyPower);
-      lodash.set(item, `${date}.cumulativeKWh`, dailyCumulativeKWh);
+      lodash.set(item, `${date}.powerValues`, dailyPower);
+      lodash.set(item, `${date}.kWhValues`, kWhValues);
 
       powerTimeSeries.push(item);
       count += 1;
@@ -143,6 +151,6 @@ const generatePowerTimeSeries = (
 module.exports = {
   generatePowerValue,
   generatePowerTimeSeries,
-  generateDailyCumulativekWh,
+  generateDailyConsumptionKWh,
   generateDailyPowerTimeSeries,
 };
