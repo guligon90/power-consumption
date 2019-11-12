@@ -51,68 +51,135 @@ where the power $P_{k}$, $k\in\{1,...,n\}$ are in watts and the time step $\Delt
 ### Routing
 Initially, it was meant to be a simple REST microservice for testing, with only one endpoint:
 ```
-GET /api/v1/consumption/**
+GET /api/v1/consumption/?query_string
 ```
+
+#### Environment variables
+
+Some of the default values for the query string parameters are fixed in some environment variables, set up
+in `docker/variables.env`. Such variables are:
+
+| Name                      |      Type         |                      Description                                          | Default Value |
+|---------------------------|:-----------------:|:--------------------------------------------------------------------------|:--------------|
+| `TYPICAL_DAY_START_TIME`  |    `string`       | The start time for a (typical) day simulation, in the format `hh:mm`      | `08:00`       |
+| `TYPICAL_DAY_END_TIME`    |    `string`       | The finish time for a (typical) day simulation, in the format `hh:mm`     | `18:00`       |
+| `DEFAULT_MIN_POWER_WATTS` |    `number`       | Default value for `minPower` query string parameter                       | `1.0`         |
+| `DEFAULT_MAX_POWER_WATTS` |    `number`       | Default value for `maxPower` query string parameter                       | `10.0`        |
+| `DEFAULT_MINUTE_STEP`     |    `integer`      | Default value for `minuteStep` query string parameter                     | `5`           |
+| `DEFAULT_DECIMAL_DIGITS`  |    `integer`      | Default number of decimal digits, for floating point rounding purposes    | `5`           |
+
 #### Query string parameters
 
-| Name             |      Type         |                      Description                         | Default Value |
-|------------------|:-----------------:|:---------------------------------------------------------|:--------------|
-| `startTimestamp` |    `string`       | Represents a date/time in the format `yyyy-mm-dd hh:mm`  |      N/A      |
-| `endTimestamp`   |    `string`       | Represents a date/time in the format `yyyy-mm-dd hh:mm`  |      N/A      |
-| `minPower`       |    `number`       | The lowest value of active (real) power, in watts [W],<br>for random generation, simulating some eletrical device.   | `0.1`  |
-| `maxPower`       |    `number`       | The highest value of active (real) power, in watts [W],<br>for random generation, simulating some eletrical device.  | `10.0` |
-| `minuteStep`     |    `integer`      | The step in minutes between randomly-generated power<br>values for a single day. | `5` |
+| Name             |      Type         |                      Description                                                                                       | Default Value                 |
+|------------------|:-----------------:|:-----------------------------------------------------------------------------------------------------------------------|:------------------------------|
+| `startTimestamp` |    `string`       | Represents a date/time in the format `yyyy-mm-dd hh:mm`                                                                |  `TYPICAL_DAY_START_TIME`*    |
+| `endTimestamp`   |    `string`       | Represents a date/time in the format `yyyy-mm-dd hh:mm`                                                                |  `TYPICAL_DAY_END_TIME`*      |
+| `minPower`       |    `number`       | The lowest value of active (real) power, in watts [W],<br>for random generation, simulating some eletrical device.     | `DEFAULT_MIN_POWER_WATTS`     |
+| `maxPower`       |    `number`       | The highest value of active (real) power, in watts [W],<br>for random generation, simulating some eletrical device.    | `DEFAULT_MAX_POWER_WATTS`     |
+| `minuteStep`     |    `integer`      | The step in minutes between randomly-generated power<br>values for a single day.                                       | `DEFAULT_MINUTE_STEP`         |
+
+[*] Naturally, the default value just apply for the time. The date specification is mandatory.
 
 #### Request example
-* Request (using [Postman](https://www.getpostman.com/)):
-  ```
-  GET /api/v1/consumption/?startTimestamp=2019-11-09 15:23&minuteStep=2&endTimestamp=2020-11-11 16:18 HTTP/1.1
-  Host: localhost:3000
-  User-Agent: PostmanRuntime/7.19.0
-  Accept: */*
-  Cache-Control: no-cache
-  Postman-Token: e4d8aa24-bfca-4b82-b1c5-beb28865bc81,92c84648-fafe-49e8-9206-7bd89b9bb20a
-  Host: localhost:3000
-  Accept-Encoding: gzip, deflate
-  Connection: keep-alive
-  cache-control: no-cache
-  ```
-* Response payload:
-  ```
-  [
-      {
-          "2019-11-09": {
-              "powerValues": [
-                  {
-                      "15:23": 8.435762652240635
-                  },
-                  {
-                      "15:25": 3.5630009133972194
-                  },
-                  {
-                      "15:27": 4.804120322135856
-                  },
-                  {
-                      "15:29": 9.189577617423351
-                  },
-                  {
-                      "15:31": 2.4441798263254024
-                  },
-                  ...
-              ],
-              "cumulativeKWh": [
-                  {
-                      "15:00": 0.003172020596257984
-                  },
-                  {
-                      "16:00": 0.008847385261002778
-                  },
-                  {
-                      "17:00": 0.013310425162393582
-                  }
-              ]
-          }
-      },
-      ...
-  ]
-  ```
+
+Here is the [cURL](https://curl.haxx.se/) code generated by [Postman](https://www.getpostman.com/):
+```
+curl -X GET \
+    'http://localhost:3000/api/v1/consumption/?maxPower=4500&minPower=3000&startTimestamp=2019-11-09%2007:10&minuteStep=3&endTimestamp=2020-11-11%2016:31' \
+    -H 'Accept: */*' \
+    -H 'Accept-Encoding: gzip, deflate' \
+    -H 'Cache-Control: no-cache' \
+    -H 'Connection: keep-alive' \
+    -H 'Host: localhost:3000' \
+    -H 'Postman-Token: [SOME_GENERATED_TOKEN]' \
+    -H 'User-Agent: PostmanRuntime/7.19.0' \
+    -H 'cache-control: no-cache'
+```
+
+As for the response payload, the generated data is structured as follows:
+```
+[
+    {
+        // Generated data for a specific day
+        "yyyy-mm-dd": {
+            // Power in Watts,
+            "powerValues": [
+                "hh:mm": 123.456,
+                ...
+            ],
+            // Energy consumption in kWh
+            "kWhValues": {
+                // Total energy for each hour
+                "hourly": [
+                    "hh:mm": 789.10,
+                    ...
+                ],
+                // Cumulative sum of the 'kWhValues' array
+                "cumulative": [
+                    "hh:mm": 789.10,
+                    ...
+                ],
+            }
+        }
+    },
+    ...
+]
+```
+
+The output for the example in question is:
+```
+[
+    {
+        "2019-11-09": {
+            "powerValues": [
+                {
+                    "07:10": 4108.60603
+                },
+                {
+                    "07:13": 3313.47811
+                },
+                ...
+                {
+                    "17:55": 4430.45599
+                },
+                {
+                    "17:58": 3980.75259
+                }
+            ],
+            "kWhValues": {
+                "hourly": [
+                    {
+                        "07:00": 2.98224
+                    },
+                    {
+                        "08:00": 3.46238
+                    },
+                    ...
+                    {
+                        "16:00": 3.6808
+                    },
+                    {
+                        "17:00": 3.61168
+                    }
+                ],
+                "cumulative": [
+                    {
+                        "07:00": 2.98224
+                    },
+                    {
+                        "08:00": 6.44462
+                    },
+                    ...
+                    {
+                        "16:00": 35.2594
+                    },
+                    {
+                        "17:00": 38.87108
+                    }
+                ]
+            }
+        }
+    },
+    ...
+]
+```
