@@ -1,4 +1,4 @@
-# Power Consumption API [WIP]
+# Power Consumption Simulation API [WIP]
 A Express microservice, running on Node.js, for generating random power (in watts) and energy consumption data (the latter in kWh), over a time period.
 
 ## Getting started
