@@ -2,7 +2,13 @@
 A Express microservice, running on Node.js, for generating random power (in watts) and energy consumption data (the latter in kWh), over a time period.
 
 ## Getting started
-Make sure that you have the latest stable releases of [Git](https://git-scm.com/), [Docker](https://docs.docker.com/), [Docker Compose](https://docs.docker.com/compose/) and [Node.js](https://nodejs.org/) installed in your system.
+Make sure that you have installed in your system the latest stable releases of the following tools:
+* [Git](https://git-scm.com/);
+* [Docker](https://docs.docker.com/);
+* [Docker Compose](https://docs.docker.com/compose/);
+* [Node.js](https://nodejs.org/);
+* [Yarn](https://yarnpkg.com/lang/en/).
+
 With the necessary installations completed, open a terminal, and execute the following commands:
 
 ```
