@@ -52,7 +52,7 @@ E[\text{kWh}] \approx
     \times\sum_{k=1}^{n}\frac{\left(P_{k} + P_{k-1}\right)\Delta t}{2}
 $$
 
-where the power $P_{k}$, $k\in\{1,...,n\}$ are in watts and the time step $\Delta t$ are in minutes.
+where the power values $P_{k}$, $k\in\{1,...,n\}$ are in watts and the time step $\Delta t$ is in minutes.
 
 ### Routing
 Initially, it was meant to be a simple REST microservice for testing, with only one endpoint:
