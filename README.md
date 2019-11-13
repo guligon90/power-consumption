@@ -65,7 +65,7 @@ GET /api/v1/consumption/?query_string
 Some of the default values for the query string parameters are fixed in some environment variables, set up
 in `docker/variables.env`. Such variables are:
 
-| Name                      |      Type         |                      Description                                          | Default Value |
+| Name                      |      Type         |                      Description                                          | Value         |
 |---------------------------|:-----------------:|:--------------------------------------------------------------------------|:--------------|
 | `TYPICAL_DAY_START_TIME`  |    `string`       | The start time for a (typical) day simulation, in the format `hh:mm`      | `08:00`       |
 | `TYPICAL_DAY_END_TIME`    |    `string`       | The finish time for a (typical) day simulation, in the format `hh:mm`     | `18:00`       |
