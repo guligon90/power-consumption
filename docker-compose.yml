@@ -1,14 +1,26 @@
-version: "3"
+version: "3.2"
 
 services:
-  power-consumption:
-    env_file: docker/variables.env
-    container_name: power-consumption
+  backend:
+    container_name: power-consumption-api
+    image: power-consumption-api
+    user: root
     build:
-      context: .
-      dockerfile: docker/Dockerfile
-    ports:
-      - "3000:3000"
-    command: yarn start
+      context: ./
+      dockerfile: ./docker/Dockerfile
+      args:
+        - TZ=America/Sao_Paulo
+    env_file:
+      - ./docker/.docker.env
     volumes:
-      - .:/usr/app
+      - type: bind
+        source: ./
+        target: /power-consumption
+    ports:
+      - target: 3000
+        published: 8080
+    networks:
+      - power-consumption-api-network
+
+networks:
+  power-consumption-api-network:
