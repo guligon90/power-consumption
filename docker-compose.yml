@@ -17,8 +17,8 @@ services:
         source: ./
         target: /power-consumption
     ports:
-      - target: 3000
-        published: 8080
+      - target: 3100
+        published: 3100
     networks:
       - power-consumption-api-network
 

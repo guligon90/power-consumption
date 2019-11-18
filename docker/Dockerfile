@@ -27,6 +27,6 @@ RUN yarn install --network-concurrency 1 && \
 
 COPY --chown=node:node ./ ./
 
-EXPOSE 3000
+EXPOSE 3100
 
 CMD ["yarn", "run", "start"]
