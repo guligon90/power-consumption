@@ -2,14 +2,6 @@ const lodash = require('lodash');
 const dateTime = require('./dateTime');
 const numberFormat = require('./numberFormat');
 
-const typicalDayStartTime = process.env.TYPICAL_DAY_START_TIME
-  ? process.env.TYPICAL_DAY_START_TIME
-  : '00:00';
-
-const typicalDayFinishTime = process.env.TYPICAL_DAY_END_TIME
-  ? process.env.TYPICAL_DAY_END_TIME
-  : '23:59';
-
 const generatePowerValue = (minPower, maxPower) => {
   let min = Math.ceil(minPower);
   let max = Math.floor(maxPower);
@@ -24,6 +16,57 @@ const generatePowerValue = (minPower, maxPower) => {
   }
 
   return numberFormat.roundToDecimals(value);
+};
+
+const buildDateTimeRange = (startTimestamp, endTimestamp) => {
+  const start = startTimestamp.length === 10 
+    ? new Date(`${startTimestamp} ${process.env.TYPICAL_DAY_START_TIME}`)
+    : new Date(startTimestamp);
+    
+  const end = endTimestamp.length === 10 
+    ? new Date(`${endTimestamp} ${process.env.TYPICAL_DAY_END_TIME}`)
+    : new Date(endTimestamp);
+
+  return {
+    startDateTime: start,
+    endDateTime: end
+  }
+};
+
+
+const generateDailyPowerTimeSeries = (
+  startTimestamp,
+  endTimestamp,
+  minuteStep,
+  minPower,
+  maxPower
+) => {
+  let dailyPowerTimeSeries = [];
+
+  // Build datetime range
+  let period = buildDateTimeRange(startTimestamp, endTimestamp);
+
+  // Starting time in minutes
+  let startTimeInMins = dateTime.convertTimeToMinutes(period.startDateTime);
+
+  // Ending time in minutes
+  let endTimeInMins = dateTime.convertTimeToMinutes(period.endDateTime);
+
+  // Loop to increment the time and push results in array
+  for (let timeInMins=startTimeInMins; timeInMins <= endTimeInMins; timeInMins += parseInt(minuteStep)) {
+    let hours = Math.floor(timeInMins/60);     // Getting hours of day in 0-24 format
+    let minutes = (timeInMins % 60);           // Getting minutes of the hour in 0-55 format
+
+    // Creating time series item, e.g., {'12:37': 0.45}
+    let item = {}
+    let key = ("0" + hours).slice(-2) + ':' + ("0" + minutes).slice(-2);
+    item[key] = generatePowerValue(minPower, maxPower);
+
+    // Pushing item into time series
+    dailyPowerTimeSeries.push(item);
+  }
+
+  return dailyPowerTimeSeries;
 };
 
 const generateDailyConsumptionKWh = (hours, powerValues, minuteStep) => {
@@ -68,40 +111,6 @@ const generateDailyConsumptionKWh = (hours, powerValues, minuteStep) => {
   }
 };
 
-const generateDailyPowerTimeSeries = (
-  startTimestamp,
-  endTimestamp,
-  minuteStep,
-  minPower,
-  maxPower
-) => {
-  const startDateTime = new Date(startTimestamp);
-  const endDateTime = new Date(endTimestamp);
-  let dailyPowerTimeSeries = [];
-
-  // Starting time in minutes
-  let startTimeInMins = dateTime.convertTimeToMinutes(startDateTime);
-
-  // Ending time in minutes
-  const endTimeInMins = dateTime.convertTimeToMinutes(endDateTime);
-
-  // Loop to increment the time and push results in array
-  for (let timeInMins=startTimeInMins; timeInMins <= endTimeInMins; timeInMins += parseInt(minuteStep)) {
-    let hours = Math.floor(timeInMins/60);     // Getting hours of day in 0-24 format
-    let minutes = (timeInMins % 60);           // Getting minutes of the hour in 0-55 format
-
-    // Creating time series item, e.g., {'12:37': 0.45}
-    let item = {}
-    let key = ("0" + hours).slice(-2) + ':' + ("0" + minutes).slice(-2);
-    item[key] = generatePowerValue(minPower, maxPower);
-
-    // Pushing item into time series
-    dailyPowerTimeSeries.push(item);
-  }
-
-  return dailyPowerTimeSeries;
-};
-
 const generatePowerTimeSeries = (
   startTimestamp,
   endTimestamp,
@@ -121,14 +130,14 @@ const generatePowerTimeSeries = (
 
       switch(count) {
         case 1:
-          finish = `${date} ${typicalDayFinishTime}`;
+          finish = `${date} ${process.env.TYPICAL_DAY_END_TIME}`;
           break;
         case (periodDays.length):
-          start = `${date} ${typicalDayStartTime}`;
+          start = `${date} ${process.env.TYPICAL_DAY_START_TIME}`;
           break;
         default:
-          start = `${date} ${typicalDayStartTime}`;
-          finish = `${date} ${typicalDayFinishTime}`;
+          start = `${date} ${process.env.TYPICAL_DAY_START_TIME}`;
+          finish = `${date} ${process.env.TYPICAL_DAY_END_TIME}`;
           break;
       }
 
