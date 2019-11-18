@@ -1,8 +1,14 @@
+const numberFormat = require('./numberFormat');
 
 const convertTimeToMinutes = (dateTimeObj) => {
   return (dateTimeObj.getHours()*60)
     + (dateTimeObj.getSeconds()/60)
     + dateTimeObj.getMinutes();
+};
+
+const isValidTimestamp = (timestamp) => {
+  const time = new Date(timestamp).getTime();
+  return numberFormat.isNumeric(time);
 };
 
 const getLocalISODateTimeString = (dateTimeObj, format = '') => {
@@ -59,5 +65,6 @@ module.exports = {
   getLocalISODateTimeString,
   convertTimeToMinutes,
   generatePeriodDays,
+  isValidTimestamp,
   getDailyHours,
 };
