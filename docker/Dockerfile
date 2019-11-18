@@ -22,10 +22,10 @@ USER node:node
 WORKDIR $APP_ROOT
 
 COPY --chown=node:node ["./package.json", "./yarn.lock", "./"]
-RUN yarn install --network-concurrency 1 && \
+RUN yarn install --verbose --network-concurrency 1 && \
     yarn cache clean
 
-COPY --chown=node:node ./ ./
+COPY --chown=node:node ./src ./
 
 EXPOSE 3100
 
