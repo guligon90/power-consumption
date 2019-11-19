@@ -14,25 +14,22 @@ With the necessary installations completed, open a terminal, and execute the fol
 ```
 $ git clone https://github.com/guligon90/power-consumption.git
 $ cd power-comsumption/
-$ docker-compose -f docker/docker-compose.yml build
-$ docker-compose up
+$ yarn install --save-dev
+$ docker-compose -f docker-compose.yml build --pull
+$ docker-compose up -d
+$ docker-compose logs --follow
 ```
 
 The output of the last command should be similar to the following:
 
 ```
-Starting power-consumption ... 
-Starting power-consumption ... done
-Attaching to power-consumption
-power-consumption    | yarn run v1.19.1
-power-consumption    | $ nodemon ./src/server.js 3000
-power-consumption    | [nodemon] 1.19.4
-power-consumption    | [nodemon] to restart at any time, enter `rs`
-power-consumption    | [nodemon] watching dir(s): *.*
-power-consumption    | [nodemon] watching extensions: js,mjs,json
-power-consumption    | [nodemon] starting `node ./src/server.js 3000`
-power-consumption    | Power consumption API listening at port 3000
+Attaching to power-consumption-api
+power-consumption-api | yarn run v1.16.0
+power-consumption-api | $ node ./src/server.js
+power-consumption-api | Power consumption API listening at port 3100
 ```
+
+To quit the docker logging stream, just press `Ctrl+C`.
 
 ## API documentation
 
@@ -62,11 +59,13 @@ GET /api/v1/consumption/?query_string
 
 #### Environment variables
 
-Some of the default values for the query string parameters are fixed in some environment variables, set up
+Some of the default values for the query string parameters, as well as some Node.js server settings, ate defined in some environment variables, set up
 in `docker/variables.env`. Such variables are:
 
 | Name                      |      Type         |                      Description                                          | Value         |
 |---------------------------|:-----------------:|:--------------------------------------------------------------------------|:--------------|
+| `NODE_ENV`                |    `string`       | The environment in which Node.js server is operating                      | `production, development` |
+| `NODE_PORT`               |    `integer`      | The Node.js server port for HTTP requests                                 | `3100`        |
 | `TYPICAL_DAY_START_TIME`  |    `string`       | The start time for a (typical) day simulation, in the format `hh:mm`      | `08:00`       |
 | `TYPICAL_DAY_END_TIME`    |    `string`       | The finish time for a (typical) day simulation, in the format `hh:mm`     | `18:00`       |
 | `DEFAULT_MIN_POWER_WATTS` |    `number`       | Default value for `minPower` query string parameter                       | `1.0`         |
