@@ -41,7 +41,10 @@ const getQueryParams = req => {
 const validateQueryParams = queryParams => {
   const messages = [];
 
-  if (queryParams === {}) {
+  if (
+    queryParams.constructor === Object &&
+    Object.entries(queryParams).length === 0
+  ) {
     return {
       message: "You must specify the APi parameters in a query string format."
     };
