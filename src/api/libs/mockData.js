@@ -1,38 +1,39 @@
-const lodash = require('lodash');
-const dateTime = require('./dateTime');
-const numberFormat = require('./numberFormat');
+const lodash = require("lodash");
+const dateTime = require("./dateTime");
+const numberFormat = require("./numberFormat");
 
 const generatePowerValue = (minPower, maxPower) => {
-  let min = Math.ceil(minPower);
-  let max = Math.floor(maxPower);
+  const min = Math.ceil(minPower);
+  const max = Math.floor(maxPower);
   let value = Math.random() * (max - min + 1) + min;
 
   if (value > max) {
-    value = Math.floor(value)
+    value = Math.floor(value);
   }
 
   if (value < min) {
-    value = Math.ceil(value)
+    value = Math.ceil(value);
   }
 
   return numberFormat.roundToDecimals(value);
 };
 
 const buildDateTimeRange = (startTimestamp, endTimestamp) => {
-  const start = startTimestamp.length === 10 
-    ? new Date(`${startTimestamp} ${process.env.TYPICAL_DAY_START_TIME}`)
-    : new Date(startTimestamp);
-    
-  const end = endTimestamp.length === 10 
-    ? new Date(`${endTimestamp} ${process.env.TYPICAL_DAY_END_TIME}`)
-    : new Date(endTimestamp);
+  const start =
+    startTimestamp.length === 10
+      ? new Date(`${startTimestamp} ${process.env.TYPICAL_DAY_START_TIME}`)
+      : new Date(startTimestamp);
+
+  const end =
+    endTimestamp.length === 10
+      ? new Date(`${endTimestamp} ${process.env.TYPICAL_DAY_END_TIME}`)
+      : new Date(endTimestamp);
 
   return {
     startDateTime: start,
     endDateTime: end
-  }
+  };
 };
-
 
 const generateDailyPowerTimeSeries = (
   startTimestamp,
@@ -41,25 +42,29 @@ const generateDailyPowerTimeSeries = (
   minPower,
   maxPower
 ) => {
-  let dailyPowerTimeSeries = [];
+  const dailyPowerTimeSeries = [];
 
   // Build datetime range
-  let period = buildDateTimeRange(startTimestamp, endTimestamp);
+  const period = buildDateTimeRange(startTimestamp, endTimestamp);
 
   // Starting time in minutes
-  let startTimeInMins = dateTime.convertTimeToMinutes(period.startDateTime);
+  const startTimeInMins = dateTime.convertTimeToMinutes(period.startDateTime);
 
   // Ending time in minutes
-  let endTimeInMins = dateTime.convertTimeToMinutes(period.endDateTime);
+  const endTimeInMins = dateTime.convertTimeToMinutes(period.endDateTime);
 
   // Loop to increment the time and push results in array
-  for (let timeInMins=startTimeInMins; timeInMins <= endTimeInMins; timeInMins += parseInt(minuteStep)) {
-    let hours = Math.floor(timeInMins/60);     // Getting hours of day in 0-24 format
-    let minutes = (timeInMins % 60);           // Getting minutes of the hour in 0-55 format
+  for (
+    let timeInMins = startTimeInMins;
+    timeInMins <= endTimeInMins;
+    timeInMins += parseInt(minuteStep)
+  ) {
+    const hours = Math.floor(timeInMins / 60); // Getting hours of day in 0-24 format
+    const minutes = timeInMins % 60; // Getting minutes of the hour in 0-55 format
 
     // Creating time series item, e.g., {'12:37': 0.45}
-    let item = {}
-    let key = ("0" + hours).slice(-2) + ':' + ("0" + minutes).slice(-2);
+    const item = {};
+    const key = ("0" + hours).slice(-2) + ":" + ("0" + minutes).slice(-2);
     item[key] = generatePowerValue(minPower, maxPower);
 
     // Pushing item into time series
@@ -70,29 +75,29 @@ const generateDailyPowerTimeSeries = (
 };
 
 const generateDailyConsumptionKWh = (hours, powerValues, minuteStep) => {
-  var kWhArray = []
-  var cumulativeKWh = 0.0;
-  var cumulativeKWhArray = []
-  const hourStep = minuteStep/60;
+  const kWhArray = [];
+  let cumulativeKWh = 0.0;
+  const cumulativeKWhArray = [];
+  const hourStep = minuteStep / 60;
 
-  hours.map(hour => {
-    let kWhItem = {};
-    let cumulativekWhItem = {};
+  hours.forEach(hour => {
+    const kWhItem = {};
+    const cumulativekWhItem = {};
     let kiloWattHour = 0.0;
-    let hourPowerValues = [];
+    const hourPowerValues = [];
 
-    // Get the power values for a specific hour.
-    powerValues.map(item => {
+    powerValues.array.forEach(item => {
       if (Object.keys(item)[0].startsWith(hour)) {
-        hourPowerValues.push(item)
+        hourPowerValues.push(item);
       }
-    })
+    });
 
     // Trapezoidal rule for the power values of the hour
-    for (i=1; i<hourPowerValues.length; i++) {
-      let previousPower = Object.values(hourPowerValues[i-1])[0];
-      let actualPower = Object.values(hourPowerValues[i])[0];
-      kiloWattHour += (0.001)*(1/2)*hourStep*(previousPower + actualPower);
+    for (let i = 1; i < hourPowerValues.length; i++) {
+      const previousPower = Object.values(hourPowerValues[i - 1])[0];
+      const actualPower = Object.values(hourPowerValues[i])[0];
+      kiloWattHour +=
+        0.001 * (1 / 2) * hourStep * (previousPower + actualPower);
     }
 
     // Push the total energy  for the hour in kWh
@@ -101,14 +106,16 @@ const generateDailyConsumptionKWh = (hours, powerValues, minuteStep) => {
 
     // Push the accumulated energy in kWh
     cumulativeKWh += kiloWattHour;
-    cumulativekWhItem[`${hour}:00`] = numberFormat.roundToDecimals(cumulativeKWh);
+    cumulativekWhItem[`${hour}:00`] = numberFormat.roundToDecimals(
+      cumulativeKWh
+    );
     cumulativeKWhArray.push(cumulativekWhItem);
-  })
+  });
 
   return {
     hourly: kWhArray,
-    cumulative: cumulativeKWhArray,
-  }
+    cumulative: cumulativeKWhArray
+  };
 };
 
 const generatePowerTimeSeries = (
@@ -118,21 +125,21 @@ const generatePowerTimeSeries = (
   minPower = process.env.DEFAULT_MIN_POWER_WATTS,
   maxPower = process.env.DEFAULT_MAX_POWER_WATTS
 ) => {
-  var powerTimeSeries = [];
+  const powerTimeSeries = [];
   const periodDays = dateTime.generatePeriodDays(startTimestamp, endTimestamp);
 
   if (periodDays.length > 0) {
-    var count = 1;
+    let count = 1;
 
-    periodDays.map(date => {
+    periodDays.forEach(date => {
       let start = startTimestamp;
       let finish = endTimestamp;
 
-      switch(count) {
+      switch (count) {
         case 1:
           finish = `${date} ${process.env.TYPICAL_DAY_END_TIME}`;
           break;
-        case (periodDays.length):
+        case periodDays.length:
           start = `${date} ${process.env.TYPICAL_DAY_START_TIME}`;
           break;
         default:
@@ -141,25 +148,37 @@ const generatePowerTimeSeries = (
           break;
       }
 
-      let item = {};
-      let dailyHours = dateTime.getDailyHours(start, finish);
-      let dailyPower = generateDailyPowerTimeSeries(start, finish, parseInt(minuteStep), minPower, maxPower);
-      let kWhValues = generateDailyConsumptionKWh(dailyHours, dailyPower, minuteStep);
+      const item = {};
+      const dailyHours = dateTime.getDailyHours(start, finish);
+      const dailyPower = generateDailyPowerTimeSeries(
+        start,
+        finish,
+        parseInt(minuteStep),
+        minPower,
+        maxPower
+      );
+      const kWhValues = generateDailyConsumptionKWh(
+        dailyHours,
+        dailyPower,
+        minuteStep
+      );
 
       lodash.set(item, `${date}.powerValues`, dailyPower);
       lodash.set(item, `${date}.kWhValues`, kWhValues);
 
       powerTimeSeries.push(item);
       count += 1;
-    })
+    });
   }
 
   return powerTimeSeries;
 };
 
-module.exports = {
+const modules = {
   generatePowerValue,
   generatePowerTimeSeries,
   generateDailyConsumptionKWh,
-  generateDailyPowerTimeSeries,
+  generateDailyPowerTimeSeries
 };
+
+module.exports = modules;
