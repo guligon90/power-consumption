@@ -13,24 +13,22 @@ const isValidTimestamp = timestamp => {
   return numberFormat.isNumeric(time);
 };
 
-const getLocalISODateTimeString = (dateTimeObj, format = "") => {
-  const tzOffset = dateTimeObj.getTimezoneOffset() * 60000; // Timezone offset in milliseconds
-  const dtWithoutTimezone = new Date(dateTimeObj - tzOffset)
-    .toISOString()
-    .slice(0, -1);
+const buildDateTimeRange = (startTimestamp, endTimestamp, toString = false) => {
+  // If only the date is informed, the default initial time is added
+  const start =
+    startTimestamp.trim().length === 10
+      ? `${startTimestamp} ${process.env.TYPICAL_DAY_START_TIME}`
+      : startTimestamp;
 
-  let output = "";
+  // If only the date is informed, the default ending time is added
+  const end =
+    endTimestamp.trim().length === 10
+      ? `${endTimestamp} ${process.env.TYPICAL_DAY_END_TIME}`
+      : endTimestamp;
 
-  switch (format) {
-    case "onlyDate":
-      output = dtWithoutTimezone.slice(0, 10);
-      break;
-    case "onlyTime":
-      output = dtWithoutTimezone.slice(11, 16);
-      break;
-    default:
-      output = dtWithoutTimezone;
-  }
+  const output = toString
+    ? { startDateTime: start, endDateTime: end }
+    : { startDateTime: new Date(start), endDateTime: new Date(end) };
 
   return output;
 };
@@ -67,8 +65,8 @@ const generatePeriodDays = (startTimestamp, endTimestamp) => {
 };
 
 const modules = {
-  getLocalISODateTimeString,
   convertTimeToMinutes,
+  buildDateTimeRange,
   generatePeriodDays,
   isValidTimestamp,
   getDailyHours

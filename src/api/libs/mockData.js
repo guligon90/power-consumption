@@ -18,23 +18,6 @@ const generatePowerValue = (minPower, maxPower) => {
   return numberFormat.roundToDecimals(value);
 };
 
-const buildDateTimeRange = (startTimestamp, endTimestamp) => {
-  const start =
-    startTimestamp.length === 10
-      ? new Date(`${startTimestamp} ${process.env.TYPICAL_DAY_START_TIME}`)
-      : new Date(startTimestamp);
-
-  const end =
-    endTimestamp.length === 10
-      ? new Date(`${endTimestamp} ${process.env.TYPICAL_DAY_END_TIME}`)
-      : new Date(endTimestamp);
-
-  return {
-    startDateTime: start,
-    endDateTime: end
-  };
-};
-
 const generateDailyPowerTimeSeries = (
   startTimestamp,
   endTimestamp,
@@ -45,7 +28,7 @@ const generateDailyPowerTimeSeries = (
   const dailyPowerTimeSeries = [];
 
   // Build datetime range
-  const period = buildDateTimeRange(startTimestamp, endTimestamp);
+  const period = dateTime.buildDateTimeRange(startTimestamp, endTimestamp);
 
   // Starting time in minutes
   const startTimeInMins = dateTime.convertTimeToMinutes(period.startDateTime);
@@ -86,7 +69,7 @@ const generateDailyConsumptionKWh = (hours, powerValues, minuteStep) => {
     let kiloWattHour = 0.0;
     const hourPowerValues = [];
 
-    powerValues.array.forEach(item => {
+    powerValues.forEach(item => {
       if (Object.keys(item)[0].startsWith(hour)) {
         hourPowerValues.push(item);
       }
@@ -118,6 +101,34 @@ const generateDailyConsumptionKWh = (hours, powerValues, minuteStep) => {
   };
 };
 
+const convergeDailyData = (day, period, minPower, maxPower, minuteStep) => {
+  const dailyData = {};
+
+  const dailyHours = dateTime.getDailyHours(
+    period.startDateTime,
+    period.endDateTime
+  );
+
+  const dailyPower = generateDailyPowerTimeSeries(
+    period.startDateTime,
+    period.endDateTime,
+    parseInt(minuteStep),
+    minPower,
+    maxPower
+  );
+
+  const kWhValues = generateDailyConsumptionKWh(
+    dailyHours,
+    dailyPower,
+    minuteStep
+  );
+
+  lodash.set(dailyData, `${day}.powerValues`, dailyPower);
+  lodash.set(dailyData, `${day}.kWhValues`, kWhValues);
+
+  return dailyData;
+};
+
 const generatePowerTimeSeries = (
   startTimestamp,
   endTimestamp,
@@ -128,47 +139,57 @@ const generatePowerTimeSeries = (
   const powerTimeSeries = [];
   const periodDays = dateTime.generatePeriodDays(startTimestamp, endTimestamp);
 
-  if (periodDays.length > 0) {
-    let count = 1;
-
-    periodDays.forEach(date => {
-      let start = startTimestamp;
-      let finish = endTimestamp;
-
-      switch (count) {
-        case 1:
-          finish = `${date} ${process.env.TYPICAL_DAY_END_TIME}`;
-          break;
-        case periodDays.length:
-          start = `${date} ${process.env.TYPICAL_DAY_START_TIME}`;
-          break;
-        default:
-          start = `${date} ${process.env.TYPICAL_DAY_START_TIME}`;
-          finish = `${date} ${process.env.TYPICAL_DAY_END_TIME}`;
-          break;
-      }
-
-      const item = {};
-      const dailyHours = dateTime.getDailyHours(start, finish);
-      const dailyPower = generateDailyPowerTimeSeries(
-        start,
-        finish,
-        parseInt(minuteStep),
-        minPower,
-        maxPower
+  switch (periodDays.length) {
+    case 0:
+      break;
+    case 1: {
+      const day = startTimestamp.slice(0, 10);
+      const period = dateTime.buildDateTimeRange(
+        startTimestamp,
+        endTimestamp,
+        true
       );
-      const kWhValues = generateDailyConsumptionKWh(
-        dailyHours,
-        dailyPower,
-        minuteStep
+      powerTimeSeries.push(
+        convergeDailyData(day, period, minPower, maxPower, minuteStep)
       );
+      break;
+    }
+    default: {
+      let count = 1;
 
-      lodash.set(item, `${date}.powerValues`, dailyPower);
-      lodash.set(item, `${date}.kWhValues`, kWhValues);
+      periodDays.forEach(day => {
+        const period = dateTime.buildDateTimeRange(
+          startTimestamp,
+          endTimestamp,
+          true
+        );
 
-      powerTimeSeries.push(item);
-      count += 1;
-    });
+        switch (count) {
+          case 1:
+            period.endDateTime = `${day} ${process.env.TYPICAL_DAY_END_TIME}`;
+            break;
+          case periodDays.length:
+            period.startDateTime = `${day} ${process.env.TYPICAL_DAY_START_TIME}`;
+            break;
+          default:
+            period.startDateTime = `${day} ${process.env.TYPICAL_DAY_START_TIME}`;
+            period.endDateTime = `${day} ${process.env.TYPICAL_DAY_END_TIME}`;
+            break;
+        }
+
+        const dailyData = convergeDailyData(
+          day,
+          period,
+          minPower,
+          maxPower,
+          minuteStep
+        );
+        powerTimeSeries.push(dailyData);
+
+        count += 1;
+      });
+      break;
+    }
   }
 
   return powerTimeSeries;
