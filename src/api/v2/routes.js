@@ -2,7 +2,7 @@ const express = require("express");
 const mockData = require("./mockData");
 const validation = require("./validation");
 
-const apiRootPath = "/api/v1";
+const apiRootPath = "/api/v2";
 const router = express.Router();
 
 // Middleware that logs the requests made to the API

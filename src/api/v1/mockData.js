@@ -1,6 +1,6 @@
 const lodash = require("lodash");
-const dateTime = require("./dateTime");
-const numberFormat = require("./numberFormat");
+const dateTime = require("../libs/dateTime");
+const numberFormat = require("../libs/numberFormat");
 
 const generatePowerValue = (minPower, maxPower) => {
   const min = Math.ceil(minPower);
