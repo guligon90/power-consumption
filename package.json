@@ -23,7 +23,7 @@
     "start": "node src/server.js",
     "debug": "node --inspect src/server.js",
     "test": "jest",
-    "lint": "eslint --fix src && prettier --write \"src/*.js\"",
-    "lint:check": "eslint src && prettier --check \"src/*.js\""
+    "lint": "eslint --fix src && prettier --write \"src/**/*.js\"",
+    "lint:check": "eslint src && prettier --check \"src/**/*.js\""
   }
 }
